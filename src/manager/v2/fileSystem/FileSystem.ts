@@ -679,10 +679,14 @@ export abstract class FileSystem implements ISerializableFileSystem
         const pathTo = new Path(_pathTo);
 
         const callback : ReturnCallback<boolean> = (e, overrided) => {
-            if(!e)
-                this.emit('move', ctx, pathFrom, { pathFrom, pathTo, overwrite, overrided })
-            callbackFinal(e, overrided);
-        }
+            const checkOverrideState : ReturnCallback<boolean> = function (exists?) {
+                overrided = (exists !== undefined) && overrided && overwrite; // Set the overrided state to a more real value
+                if(!e)
+                    this.emit('move', ctx, pathFrom, { pathFrom, pathTo, overwrite, overrided });
+                callbackFinal(e, overrided);
+            };
+            this.fastExistCheckExReverse(ctx, pathTo, checkOverrideState, checkOverrideState);
+        };
 
         this.emit('before-move', ctx, pathFrom, { pathFrom, pathTo, overwrite })
 
